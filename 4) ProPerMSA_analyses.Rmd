@@ -61,7 +61,7 @@ comp_df <- mutate(
 comp_df <- mutate(
   group_by(comp_df, file),
 ## compute and smooth 1st and 2nd derivatives of the periodic energy curve
-  smogPP_1stDer = ifelse(t==0, 0, (smogPP_20Hz - lag(smogPP_20Hz,1))*1000),
+  smogPP_1stDer = ifelse(t==0, 0, (smogPP_12Hz - lag(smogPP_12Hz,1))*1000),
   smogPP_1stDer = bwfilter(wave = smogPP_1stDer, f = 1000, to = 40, n = 2),
   smogPP_2ndDer = ifelse(t==0, 0, (smogPP_1stDer - lag(smogPP_1stDer,1))*20)
   )
@@ -167,7 +167,7 @@ comp_df_comb <- plyr::ldply(files, function(f){
 comp_df <- comp_df_comb
 #
 # delete temporary single_token files
-unlink("data_tables/single_tokens/*.csv")
+# unlink("data_tables/single_tokens/*.csv")
 #
 ## add boundaries at manual 'syll_bounds' if there are no close automatic 'auto_bounds'
 if(useManual==TRUE) comp_df <- mutate(
@@ -215,7 +215,7 @@ auto_boundsPlot <- dplyr::filter(droplevels(comp_df), file==detect_sel_file)
 # plot derivatives to adjust automatic detector
 singleBounds <- ggplot(auto_boundsPlot, aes(x=t)) +
 ##### Periodic energy (smogPP_XXHz)
-  geom_line(aes(y=smogPP_20Hz*100), color="red", alpha=.4, size=1.5) +
+  geom_line(aes(y=smogPP_12Hz*100), color="red", alpha=.4, size=1.5) +
 #### boundaries
   geom_hline(yintercept = 0, size=.2, alpha=.5) +
   {if(manual==TRUE) geom_vline(aes(xintercept=syll_bounds), linetype="dotted", color="gray", size=.5, alpha=.5)} +
@@ -288,13 +288,13 @@ markMap <- function(.x,.f,...) {
 ### Caculation functions (specific)
 # Area Under the Curve ('mass' relating to prosodic strength)
 mass <- function(df) {
-  x <- round(sum(df$smogPP_20Hz, na.rm=T),3) 
+  x <- round(sum(df$smogPP_12Hz, na.rm=T),3) 
   x
   }
 #
 # length of interval with periodic energy 
 intervalDuration <- function(df) {
-  x <- length(which(df$smogPP_20Hz > 0.01)) 
+  x <- length(which(df$smogPP_12Hz > 0.01)) 
   x
   }
 #
@@ -302,8 +302,8 @@ intervalDuration <- function(df) {
 CoM <- function(df) {
   # print(df)
   ifelse(
-    sum(df$smogPP_20Hz, na.rm=T) < 5, 0, # minimum = 50 (ms) * 0.1 (smogPP) = 5
-    round(sum(df$smogPP_20Hz * df$t, na.rm=T) / sum(df$smogPP_20Hz, na.rm=T)))
+    sum(df$smogPP_12Hz, na.rm=T) < 5, 0, # minimum = 50 (ms) * 0.1 (smogPP) = 5
+    round(sum(df$smogPP_12Hz * df$t, na.rm=T) / sum(df$smogPP_12Hz, na.rm=T)))
   }
 #
 # Center of Gravity (center of F0 slope) 
@@ -314,8 +314,8 @@ CoG <- function(df) {
                     min(df$f0_realFloorStretch, na.rm=T) - .1 * df$f0_speaker_range, 
                     min(df$f0_realFloorStretch, na.rm=T) - .1 * 100)
   ifelse(
-    sum(df$smogPP_20Hz, na.rm=T) < 5, 0, # minimum = 50 (ms) * 0.1 (smogPP) = 5
-    round(sum((df$f0_interp_stretch_smooth - f0Floor) * df$t * df$smogPP_20Hz, na.rm=T) / sum((df$f0_interp_stretch_smooth - f0Floor) * df$smogPP_20Hz, na.rm=T),3))
+    sum(df$smogPP_12Hz, na.rm=T) < 5, 0, # minimum = 50 (ms) * 0.1 (smogPP) = 5
+    round(sum((df$f0_interp_stretch_smooth - f0Floor) * df$t * df$smogPP_12Hz, na.rm=T) / sum((df$f0_interp_stretch_smooth - f0Floor) * df$smogPP_12Hz, na.rm=T),3))
   }
 #
 # F0 and periodic energy values at centers
@@ -323,8 +323,8 @@ f0atCoM <- function(df) ifelse(df$CoM==0, 0, df$f0_interp_stretch_smooth[df$t ==
 f0atCoG <- function(df) ifelse(df$CoG==0, 0, df$f0_interp_stretch_smooth[df$t == round(df$CoG)])
 # f0atCoM <- function(df) ifelse(df$CoM==0, 0, round(df$f0_interp_stretch_smooth[df$t == round(df$CoM)]))
 # f0atCoG <- function(df) ifelse(df$CoG==0, 0, round(df$f0_interp_stretch_smooth[df$t == round(df$CoG)]))
-PERatCoM <- function(df) ifelse(df$CoM==0, 0, df$smogPP_20Hz[df$t == round(df$CoM)])
-PERatCoG <- function(df) ifelse(df$CoG==0, 0, df$smogPP_20Hz[df$t == round(df$CoG)])
+PERatCoM <- function(df) ifelse(df$CoM==0, 0, df$smogPP_12Hz[df$t == round(df$CoM)])
+PERatCoG <- function(df) ifelse(df$CoG==0, 0, df$smogPP_12Hz[df$t == round(df$CoG)])
 # PERatCoM <- function(df) ifelse(df$CoM==0, 0, round(df$smogPP_20Hz[df$t == round(df$CoM)],4))
 # PERatCoG <- function(df) ifelse(df$CoG==0, 0, round(df$smogPP_20Hz[df$t == round(df$CoG)],4))
 #
@@ -396,7 +396,7 @@ comp_df <- mutate(
   ## normalize parameters 
   DeltaF0_rel = round((DeltaF0 / f0_speaker_range) * 100, 3),
   sync_rel = round((synchrony / intervalDuration) * 100, 3),
-  mass_rel = round(mass / (sum(smogPP_20Hz, na.rm=T) / length(levels(as.factor(CoM_corr)))), 3),
+  mass_rel = round(mass / (sum(smogPP_12Hz, na.rm=T) / length(levels(as.factor(CoM_corr)))), 3),
   intervalDuration_rel = ifelse(
     !is.na(intervalDuration), 
     round(intervalDuration / max(intervalDuration, na.rm=T), 3), NA),
@@ -447,7 +447,7 @@ comp_df <- mutate(
 
 ```{r plot, warning=FALSE}
 
-yScale <- c('tokenScale', 'speakerScale', 'dataScale')[1]
+yScale <- c('tokenScale', 'speakerScale', 'dataScale')[2]
 
 ##################################
 ########### loop start ###########
@@ -498,7 +498,7 @@ plot_comp <-
   ##### periogram (smogPP)
   geom_line(aes(y=f0_interp_stretch_smooth),color="blue", alpha=single_token$smogPP_20Hz, size=single_token$smogPP_20Hz*3.5) +
 ####################### Periodic energy curve
-  geom_line(aes(y=smogPP_20Hz*f0range+plotFloor),color="red", alpha=.75, size=.5) +
+  geom_line(aes(y=smogPP_12Hz*f0range+plotFloor),color="red", alpha=.75, size=.5) +
 ####################### Speech-rate curve
   geom_line(aes(y=localSpeechRate*f0range+plotFloor),color="springgreen4", alpha=.75, size=2.5, linetype="solid", linejoin = "round")+#, lineend = "butt", linejoin = "round") +
 ####################### boundaries
@@ -513,6 +513,7 @@ plot_comp <-
 ####################### annotations
   ##### text
   {if(manual==TRUE) geom_text(aes(x=single_token$syll_mid, y=f0max+plotUnits*8, label=syll_label, check_overlap=T), color="black", size=3, family= "Helvetica")} +
+  geom_text(aes(x=single_token$word_mid, y=f0max+plotUnits*13, label=word_label, check_overlap=T), color="grey", size=4, family= "Helvetica") +
   ##### ∆F0 / F0 @ CoM
   geom_text(aes(x=CoM_corr, y=f0atCoM+plotUnits*4, label=DeltaF0Label), check_overlap=T, color="blue", size=2, family= "Helvetica") + 
   ##### Synchrony
@@ -537,7 +538,7 @@ plot_comp <-
   geom_text(aes(x=maxBounds+10, y=midLow-plotUnits, label="weak < 1 < strong"), check_overlap=T, color="red", size=2, family= "Helvetica", hjust="left") + 
 ####################### plot stuff
   # xlim(minBounds-100, max(single_token$t)) +
-  ylim(plotFloor-plotUnits, f0max+plotUnits*9) +
+  ylim(plotFloor-plotUnits, f0max+plotUnits*14) +
   theme(plot.title = element_blank(), panel.background = element_blank(), plot.background = element_rect(fill = "white"), panel.grid = element_blank(), axis.title = element_blank(), axis.text.x = element_text(size = 8), axis.text.y = element_text(size = 8), axis.ticks = element_blank(), strip.text = element_text(size = 8)) 
 print(plot_comp)
 ##--save?

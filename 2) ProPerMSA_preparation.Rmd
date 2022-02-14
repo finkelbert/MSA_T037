@@ -77,7 +77,7 @@ pitchObject_df <- plyr::ldply(files_pitchObject, function(f){
 })
 ```
 
-# Read TextGrids: 'Syllable' tier
+# Read TextGrids: 'syllables' tier
 
 ```{r pre_prepare_TextGrids_Syllable, warning=FALSE}
 
@@ -110,7 +110,7 @@ if(exists("textGridSyll_df")) textGridSyll_df <- filter(textGridSyll_df, !is.na(
 
 ```
 
-# Read TextGrids: 'Word' tier
+# Read TextGrids: 'words' tier
 
 ```{r pre_prepare_TextGrids_Word, warning=FALSE}
 
