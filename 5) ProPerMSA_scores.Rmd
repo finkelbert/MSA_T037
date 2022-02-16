@@ -106,8 +106,18 @@ trial_lists_df <- plyr::ldply(files, function(f){
   trials <- read.csv(f,header=T, sep=",")
 })
 
+# remove underscore from MSA names JW_2 and JW_3
+trial_lists_df$speaker <- as.character(trial_lists_df$speaker)
+trial_lists_df$speaker[which(trial_lists_df$speaker == "JW_2")] <- "JW2"
+trial_lists_df$speaker[which(trial_lists_df$speaker == "JW_3")] <- "JW3"
+trial_lists_df$speaker <- as.factor(trial_lists_df$speaker)
+
 ## combine MSA data wirh ProPer scores
 ProPerMSA <- left_join(nano_scores_df, trial_lists_df, by = c("speaker", "trial", "condition"))
+
+# temporary fix
+# ProPerMSA$syllable[which(ProPerMSA$syllable=="\nab")] <- "ab"
+droplevels(ProPerMSA$syllable)
 
 ## Write the ProPer MSA scores data file
 write.csv(ProPerMSA, "data_tables/ProPer_MSA_scores.csv", row.names=FALSE)
