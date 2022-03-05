@@ -1,0 +1,463 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r clean_start, warning=FALSE, include=FALSE}
+rm(list = ls())
+
+## Load required libraries 
+require(lme4)
+require(tidyverse)
+
+ProPer_MSA_scores <- read.csv("data_tables/ProPer_MSA_scores.csv")
+
+data_disyllabics <- filter(ProPer_MSA_scores, target_name!="Zitrone" & target_colour!="orange")
+
+data_phase2 <- filter(ProPer_MSA_scores, target_name=="Zitrone" | target_colour=="orange")
+
+# Create subsets: typicality
+data_atypical <- droplevels(filter(ProPer_MSA_scores, typicality == "atypical"))
+data_typical <- droplevels(filter(ProPer_MSA_scores, typicality == "typical"))
+data_medium <- droplevels(filter(ProPer_MSA_scores, typicality == "medium"))
+
+data_atypical_Phase1 <- droplevels(filter(data_disyllabics, typicality == "atypical"))
+data_typical_Phase1 <- droplevels(filter(data_disyllabics, typicality == "typical"))
+data_medium_Phase1 <- droplevels(filter(data_disyllabics, typicality == "medium"))
+
+data_atypical_Phase2 <- droplevels(filter(data_phase2, typicality == "atypical"))
+data_typical_Phase2 <- droplevels(filter(data_phase2, typicality == "typical"))
+
+# Create subsets: fatigue
+data_early <- filter(ProPer_MSA_scores, trial < 36) # trial < 25
+data_late <- filter(ProPer_MSA_scores, trial > 35) # trial > 45
+# data_midtime <- filter(ProPer_MSA_scores, trial < 25 & trial > 45)
+data_early_Phase1 <- filter(data_disyllabics, trial < 36) # trial < 25
+data_late_Phase1 <- filter(data_disyllabics, trial > 35) # trial > 45
+#
+data_early_Phase2 <- filter(data_phase2, trial < 36) # trial < 25
+data_late_Phase2 <- filter(data_phase2, trial > 35) # trial > 45
+
+
+# https://youtu.be/SY3Kxf7ZTeI
+```
+
+# Concertos for Nine Violins
+<!-- [^1] -->
+
+### Distributions of ProPer metrics
+
+#### MSA Team 037
+
+The following plots show F0-related metrics (*synchrony* and *∆F0*) and a prosodic strength metric (*mass*) from the ProPer toolbox. 
+
+We compare here ***typicality*** by separating tokens with *typical* (n=1040), *atypical* (n=1466) and *medium* (n=503) ratings.
+
+We compare here ***fatigue*** by separating tokens from the first 35 trials (n=1513) and the last 35 trials (n=1496) in terms of *early* vs. *late*.
+
+The final plots also show separate duration and power measurements to explore the two components of *mass*, comparing only *typicality*. This is added in order to investigate further the most reliable (only?) difference to emerge from this set --- the difference in the *mass* values of syllable N_F (the final syllable of the object noun), between typical and atypical/medium ratings.
+
+<!-- [^1]: Borrowed from [Vivaldi's Concerto for Four Violins](https://www.britannica.com/topic/Concerto-for-Four-Violins-and-Cello-in-B-Minor-Op-3-No-10) -->
+
+***
+
+## Synchrony plots
+F0 shape within syllables
+
+***Synchrony*** interpretation: falling < 0 < rising
+
+##### Typicality (typical, atypical & medium ratings)
+
+```{r plotSyncTyp, warning=FALSE, echo=FALSE}
+
+ggplot(data_typical_Phase1, aes(x = factor(syllable, level = c("auf", "Art", "A_P*", "A_F", "N_P*", "N_F", "ab", "le", "gen")), y = sync_rel)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = speaker), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = c(2.5, 6.5), linetype = "solid") +   
+  geom_vline(xintercept = c(4.5), linetype = "dotted") +
+  ylim(-20, 20)+
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "speaker")+
+  ggtitle("Synchrony (typical trials)") +
+  xlab("Syllable")+
+  ylab("Synchrony (%)")
+
+ggplot(data_atypical_Phase1, aes(x = factor(syllable, level = c("auf", "Art", "A_P*", "A_F", "N_P*", "N_F", "ab", "le", "gen")), y = sync_rel)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = speaker), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = c(2.5, 6.5), linetype = "solid") +   
+  geom_vline(xintercept = c(4.5), linetype = "dotted") +
+  ylim(-20, 20)+
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "speaker")+
+  ggtitle("Synchrony (atypical trials)") +
+  xlab("Syllable")+
+  ylab("Synchrony (%)")
+
+```
+
+<!-- ##### Typicality (medium ratings) -->
+
+```{r plotSyncMed, warning=FALSE, echo=FALSE}
+
+ggplot(data_medium_Phase1, aes(x = factor(syllable, level = c("auf", "Art", "A_P*", "A_F", "N_P*", "N_F", "ab", "le", "gen")), y = sync_rel)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = speaker), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = c(2.5, 6.5), linetype = "solid") +   
+  geom_vline(xintercept = c(4.5), linetype = "dotted") +
+  ylim(-20, 20)+
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "speaker")+
+  ggtitle("Synchrony (medium trials)") +
+  xlab("Syllable")+
+  ylab("Synchrony (%)")
+
+```
+
+##### Fatigue (early vs. late trials)
+
+```{r plotSyncFat, warning=FALSE, echo=FALSE}
+
+ggplot(data_early_Phase1, aes(x = factor(syllable, level = c("auf", "Art", "A_P*", "A_F", "N_P*", "N_F", "ab", "le", "gen")), y = sync_rel)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = speaker), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = c(2.5, 6.5), linetype = "solid") +
+  geom_vline(xintercept = c(4.5), linetype = "dotted") +
+  ylim(-20, 20)+
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "speaker")+
+  ggtitle("Synchrony (early trials)")+
+  xlab("Syllable")+
+  ylab("Synchrony (%)")
+
+ggplot(data_late_Phase1, aes(x = factor(syllable, level = c("auf", "Art", "A_P*", "A_F", "N_P*", "N_F", "ab", "le", "gen")), y = sync_rel)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = speaker), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = c(2.5, 6.5), linetype = "solid") +
+  geom_vline(xintercept = c(4.5), linetype = "dotted") +
+  ylim(-20, 20)+
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "speaker")+
+  ggtitle("Synchrony (late trials)")+
+  xlab("Syllable")+
+  ylab("Synchrony (%)")
+
+
+```
+
+## ∆F0 plots
+F0 change between syllables
+
+***∆F0*** interpretation: lower < 0 < higher
+
+##### Typicality (typical, atypical & medium ratings)
+
+```{r plotDeltaF0Typ, warning=FALSE, echo=FALSE}
+
+ggplot(data_typical_Phase1, aes(x = factor(syllable, level = c("auf", "Art", "A_P*", "A_F", "N_P*", "N_F", "ab", "le", "gen")), y = DeltaF0_rel)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = speaker), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = c(2.5, 6.5), linetype = "solid") +   
+  geom_vline(xintercept = c(4.5), linetype = "dotted") +
+  ylim(-75, 75)+
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "speaker")+
+  ggtitle("∆F0 (typical trials)") +
+  xlab("Syllable")+
+  ylab("∆F0 (%)")
+
+ggplot(data_atypical_Phase1, aes(x = factor(syllable, level = c("auf", "Art", "A_P*", "A_F", "N_P*", "N_F", "ab", "le", "gen")), y = DeltaF0_rel)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = speaker), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = c(2.5, 6.5), linetype = "solid") +   
+  geom_vline(xintercept = c(4.5), linetype = "dotted") +
+  ylim(-75, 75)+
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "speaker")+
+  ggtitle("∆F0 (atypical trials)") +
+  xlab("Syllable")+
+  ylab("∆F0 (%)")
+
+```
+
+<!-- ##### Typicality (medium ratings) -->
+
+```{r plotDeltaF0Med, warning=FALSE, echo=FALSE}
+
+ggplot(data_medium_Phase1, aes(x = factor(syllable, level = c("auf", "Art", "A_P*", "A_F", "N_P*", "N_F", "ab", "le", "gen")), y = DeltaF0_rel)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = speaker), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = c(2.5, 6.5), linetype = "solid") +   
+  geom_vline(xintercept = c(4.5), linetype = "dotted") +
+  ylim(-75, 75)+
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "speaker")+
+  ggtitle("∆F0 (medium trials)") +
+  xlab("Syllable")+
+  ylab("∆F0 (%)")
+
+```
+
+##### Fatigue (early vs. late trials)
+
+```{r plotDeltaF0Fat, warning=FALSE, echo=FALSE}
+
+ggplot(data_early_Phase1, aes(x = factor(syllable, level = c("auf", "Art", "A_P*", "A_F", "N_P*", "N_F", "ab", "le", "gen")), y = DeltaF0_rel)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = speaker), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = c(2.5, 6.5), linetype = "solid") +   
+  geom_vline(xintercept = c(4.5), linetype = "dotted") +
+  ylim(-75, 75)+
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "speaker")+
+  ggtitle("∆F0 (early trials)") +
+  xlab("Syllable")+
+  ylab("∆F0 (%)")
+
+ggplot(data_late_Phase1, aes(x = factor(syllable, level = c("auf", "Art", "A_P*", "A_F", "N_P*", "N_F", "ab", "le", "gen")), y = DeltaF0_rel)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = speaker), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = c(2.5, 6.5), linetype = "solid") +   
+  geom_vline(xintercept = c(4.5), linetype = "dotted") +
+  ylim(-75, 75)+
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "speaker")+
+  ggtitle("∆F0 (late trials)") +
+  xlab("Syllable")+
+  ylab("∆F0 (%)")
+
+```
+
+## Mass plots
+Prosodic strength (duration X power) of syllabic intervals
+
+***Mass*** interpretation: weaker < 1 < stronger
+
+##### Typicality (typical, atypical & medium ratings)
+
+```{r plotMassTyp, warning=FALSE, echo=FALSE}
+
+ggplot(data_typical_Phase1, aes(x = factor(syllable, level = c("auf", "Art", "A_P*", "A_F", "N_P*", "N_F", "ab", "le", "gen")), y = mass_rel)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = speaker), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = 1) +
+  geom_vline(xintercept = c(2.5, 6.5), linetype = "solid") +   
+  geom_vline(xintercept = c(4.5), linetype = "dotted") +
+  ylim(0, 4)+
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "speaker")+
+  ggtitle("Mass (typical trials)") +
+  xlab("Syllable")+
+  ylab("Mass (relative scale)")
+
+ggplot(data_atypical_Phase1, aes(x = factor(syllable, level = c("auf", "Art", "A_P*", "A_F", "N_P*", "N_F", "ab", "le", "gen")), y = mass_rel)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = speaker), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = 1) +
+  geom_vline(xintercept = c(2.5, 6.5), linetype = "solid") +   
+  geom_vline(xintercept = c(4.5), linetype = "dotted") +
+  ylim(0, 4)+
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "speaker")+
+  ggtitle("Mass (atypical trials)") +
+  xlab("Syllable")+
+  ylab("Mass (relative scale)")
+
+```
+
+<!-- ##### Typicality (medium ratings) -->
+
+```{r plotMassMed, warning=FALSE, echo=FALSE}
+
+ggplot(data_medium_Phase1, aes(x = factor(syllable, level = c("auf", "Art", "A_P*", "A_F", "N_P*", "N_F", "ab", "le", "gen")), y = mass_rel)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = speaker), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = 1) +
+  geom_vline(xintercept = c(2.5, 6.5), linetype = "solid") +   
+  geom_vline(xintercept = c(4.5), linetype = "dotted") +
+  ylim(0, 4)+
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "speaker")+
+  ggtitle("Mass (medium trials)") +
+  xlab("Syllable")+
+  ylab("Mass (relative scale)")
+
+```
+
+##### Fatigue (early vs. late trials)
+
+```{r plotMassFat, warning=FALSE, echo=FALSE}
+
+ggplot(data_early_Phase1, aes(x = factor(syllable, level = c("auf", "Art", "A_P*", "A_F", "N_P*", "N_F", "ab", "le", "gen")), y = mass_rel)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = speaker), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = 1) +
+  geom_vline(xintercept = c(2.5, 6.5), linetype = "solid") +   
+  geom_vline(xintercept = c(4.5), linetype = "dotted") +
+  ylim(0, 4)+
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "speaker")+
+  ggtitle("Mass (early trials)") +
+  xlab("Syllable")+
+  ylab("Mass (relative scale)")
+
+ggplot(data_late_Phase1, aes(x = factor(syllable, level = c("auf", "Art", "A_P*", "A_F", "N_P*", "N_F", "ab", "le", "gen")), y = mass_rel)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = speaker), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = 1) +
+  geom_vline(xintercept = c(2.5, 6.5), linetype = "solid") +   
+  geom_vline(xintercept = c(4.5), linetype = "dotted") +
+  ylim(0, 4)+
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "speaker")+
+  ggtitle("Mass (late trials)") +
+  xlab("Syllable")+
+  ylab("Mass (relative scale)")
+
+```
+
+## Duration plots
+Duration of syllabic intervals
+
+Absolute values  
+(200 ms marked for typical average syllable)
+
+##### Typicality (typical, atypical & medium ratings)
+
+```{r plotDuration, warning=FALSE, echo=FALSE}
+
+ggplot(data_typical_Phase1, aes(x = factor(syllable, level = c("auf", "Art", "A_P*", "A_F", "N_P*", "N_F", "ab", "le", "gen")), y = intervalDuration)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = speaker), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = 200) +
+  geom_vline(xintercept = c(2.5, 6.5), linetype = "solid") +   
+  geom_vline(xintercept = c(4.5), linetype = "dotted") +
+  ylim(0, 500) +
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "speaker")+
+  ggtitle("Duration (typical trials)") +
+  xlab("Syllable")+
+  ylab("Duration (ms)")
+
+ggplot(data_atypical_Phase1, aes(x = factor(syllable, level = c("auf", "Art", "A_P*", "A_F", "N_P*", "N_F", "ab", "le", "gen")), y = intervalDuration)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = speaker), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = 200) +
+  geom_vline(xintercept = c(2.5, 6.5), linetype = "solid") +   
+  geom_vline(xintercept = c(4.5), linetype = "dotted") +
+  ylim(0, 500) +
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "speaker")+
+  ggtitle("Duration (atypical trials)") +
+  xlab("Syllable")+
+  ylab("Duration (ms)")
+
+```
+
+<!-- ##### Typicality (medium ratings) -->
+
+```{r plotDurationMed, warning=FALSE, echo=FALSE}
+
+ggplot(data_medium_Phase1, aes(x = factor(syllable, level = c("auf", "Art", "A_P*", "A_F", "N_P*", "N_F", "ab", "le", "gen")), y = intervalDuration)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = speaker), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = 200) +
+  geom_vline(xintercept = c(2.5, 6.5), linetype = "solid") +   
+  geom_vline(xintercept = c(4.5), linetype = "dotted") +
+  ylim(0, 500)+
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "speaker")+
+  ggtitle("Duration (medium trials)") +
+  xlab("Syllable")+
+  ylab("Duration (ms)")
+
+```
+
+## Power plots
+Periodic energy means of syllabic intervals
+
+Periodic energy in a normalized (0--1) logarithmic scale  
+(0.5 marked for scale's median)
+
+##### Typicality (typical, atypical & medium ratings)
+
+```{r plotPower, warning=FALSE, echo=FALSE}
+
+ggplot(data_typical_Phase1, aes(x = factor(syllable, level = c("auf", "Art", "A_P*", "A_F", "N_P*", "N_F", "ab", "le", "gen")), y = mass/intervalDuration)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = speaker), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = .5) +
+  geom_vline(xintercept = c(2.5, 6.5), linetype = "solid") +   
+  geom_vline(xintercept = c(4.5), linetype = "dotted") +
+  ylim(0, 1) +
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "speaker")+
+  ggtitle("Power (typical trials)") +
+  xlab("Syllable")+
+  ylab("Periodic energy (normalized dB)")
+
+ggplot(data_atypical_Phase1, aes(x = factor(syllable, level = c("auf", "Art", "A_P*", "A_F", "N_P*", "N_F", "ab", "le", "gen")), y = mass/intervalDuration)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = speaker), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = .5) +
+  geom_vline(xintercept = c(2.5, 6.5), linetype = "solid") +   
+  geom_vline(xintercept = c(4.5), linetype = "dotted") +
+  ylim(0, 1) +
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "speaker")+
+  ggtitle("Power (atypical trials)") +
+  xlab("Syllable")+
+  ylab("Periodic energy (normalized dB)")
+
+```
+
+<!-- ##### Typicality (medium ratings) -->
+
+```{r plotPowerMed, warning=FALSE, echo=FALSE}
+
+ggplot(data_medium_Phase1, aes(x = factor(syllable, level = c("auf", "Art", "A_P*", "A_F", "N_P*", "N_F", "ab", "le", "gen")), y = mass/intervalDuration)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = speaker), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = .5) +
+  geom_vline(xintercept = c(2.5, 6.5), linetype = "solid") +   
+  geom_vline(xintercept = c(4.5), linetype = "dotted") +
+  ylim(0, 1)+
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "speaker")+
+  ggtitle("Power (medium trials)") +
+  xlab("Syllable")+
+  ylab("Periodic energy (normalized dB)")
+
+```

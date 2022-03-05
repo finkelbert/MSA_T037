@@ -1,0 +1,383 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r clean_start, warning=FALSE, include=FALSE}
+rm(list = ls())
+
+## Load required libraries 
+require(lme4)
+require(tidyverse)
+
+ProPer_MSA_scores <- read.csv("data_tables/ProPer_MSA_scores.csv")
+
+# Create subsets: by syllable
+data_A_stress <- droplevels(filter(ProPer_MSA_scores, syllable=="A_A*" | syllable=="A_P*"))
+data_A_final <- droplevels(filter(ProPer_MSA_scores, syllable=="A_F"))
+data_N_stress <- droplevels(filter(ProPer_MSA_scores, syllable=="N_P*"))
+data_N_final <- droplevels(filter(ProPer_MSA_scores, syllable=="N_F"))
+data_ab <- droplevels(filter(ProPer_MSA_scores, syllable=="ab"))
+
+# https://youtu.be/SY3Kxf7ZTeI
+```
+
+# Concertos for Multiple Violins (phase 2)
+<!-- [^1] -->
+
+### Distributions of ProPer metrics
+
+#### MSA Team 037
+
+***
+
+<!-- ## Synchrony plots -->
+<!-- F0 shape within syllables -->
+
+<!-- ***Synchrony*** interpretation: falling < 0 < rising -->
+
+<!-- ```{r plotSyncBYsyll, warning=FALSE, echo=FALSE} -->
+<!-- # , include=FALSE -->
+<!--   ggplot(data_A_stress, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y = sync_rel)) + -->
+<!--   geom_violin(width = .9) + -->
+<!--   geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) + -->
+<!--   geom_hline(yintercept = 0) + -->
+<!--   ylim(-20, 20)+ -->
+<!--   stat_summary(fun = "mean", shape = 3, size = 1)+ -->
+<!--   theme_classic()+ -->
+<!--   scale_color_discrete(name = "typicality")+ -->
+<!--   ggtitle("Synchrony: Adjective stressed syllable (A_A*/A_P*)") + -->
+<!--   xlab("Noun")+ -->
+<!--   ylab("Synchrony (%)") -->
+
+<!--   ggplot(data_A_final, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y = sync_rel)) + -->
+<!--   geom_violin(width = .9) + -->
+<!--   geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) + -->
+<!--   geom_hline(yintercept = 0) + -->
+<!--   ylim(-20, 20)+ -->
+<!--   stat_summary(fun = "mean", shape = 3, size = 1)+ -->
+<!--   theme_classic()+ -->
+<!--   scale_color_discrete(name = "typicality")+ -->
+<!--   ggtitle("Synchrony: Adjective final syllable (A_F)") + -->
+<!--   xlab("Noun")+ -->
+<!--   ylab("Synchrony (%)") -->
+
+<!--   ggplot(data_N_stress, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y = sync_rel)) + -->
+<!--   geom_violin(width = .9) + -->
+<!--   geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) + -->
+<!--   geom_hline(yintercept = 0) + -->
+<!--   ylim(-20, 20)+ -->
+<!--   stat_summary(fun = "mean", shape = 3, size = 1)+ -->
+<!--   theme_classic()+ -->
+<!--   scale_color_discrete(name = "typicality")+ -->
+<!--   ggtitle("Synchrony: Noun stressed syllable (N_P*)") + -->
+<!--   xlab("Noun")+ -->
+<!--   ylab("Synchrony (%)") -->
+
+<!--   ggplot(data_N_final, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y = sync_rel)) + -->
+<!--   geom_violin(width = .9) + -->
+<!--   geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) + -->
+<!--   geom_hline(yintercept = 0) + -->
+<!--   ylim(-20, 20)+ -->
+<!--   stat_summary(fun = "mean", shape = 3, size = 1)+ -->
+<!--   theme_classic()+ -->
+<!--   scale_color_discrete(name = "typicality")+ -->
+<!--   ggtitle("Synchrony: Noun final syllable (N_F)") + -->
+<!--   xlab("Noun")+ -->
+<!--   ylab("Synchrony (%)") -->
+
+<!--   ggplot(data_ab, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y = sync_rel)) + -->
+<!--   geom_violin(width = .9) + -->
+<!--   geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) + -->
+<!--   geom_hline(yintercept = 0) + -->
+<!--   ylim(-20, 20)+ -->
+<!--   stat_summary(fun = "mean", shape = 3, size = 1)+ -->
+<!--   theme_classic()+ -->
+<!--   scale_color_discrete(name = "typicality")+ -->
+<!--   ggtitle("Synchrony: ab(legen)") + -->
+<!--   xlab("Noun")+ -->
+<!--   ylab("Synchrony (%)") -->
+
+<!-- ``` -->
+
+<!-- ## ∆F0 plots -->
+<!-- F0 change between syllables -->
+
+<!-- ***∆F0*** interpretation: lower < 0 < higher -->
+
+<!-- ```{r plotDeltaF0bySyll, warning=FALSE, echo=FALSE} -->
+<!-- # , include=FALSE -->
+<!--   ggplot(data_A_stress, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y = DeltaF0_rel)) + -->
+<!--   geom_violin(width = .9) + -->
+<!--   geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) + -->
+<!--   geom_hline(yintercept = 0) + -->
+<!--   ylim(-75, 75)+ -->
+<!--   stat_summary(fun = "mean", shape = 3, size = 1)+ -->
+<!--   theme_classic()+ -->
+<!--   scale_color_discrete(name = "typicality")+ -->
+<!--   ggtitle("∆F0: Adjective stressed syllable (A_A*/A_P*)") + -->
+<!--   xlab("Noun")+ -->
+<!--   ylab("∆F0 (%)") -->
+
+<!--   ggplot(data_A_final, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y = DeltaF0_rel)) + -->
+<!--   geom_violin(width = .9) + -->
+<!--   geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) + -->
+<!--   geom_hline(yintercept = 0) + -->
+<!--   ylim(-75, 75)+ -->
+<!--   stat_summary(fun = "mean", shape = 3, size = 1)+ -->
+<!--   theme_classic()+ -->
+<!--   scale_color_discrete(name = "typicality")+ -->
+<!--   ggtitle("∆F0: Adjective final syllable (A_F)") + -->
+<!--   xlab("Noun")+ -->
+<!--   ylab("∆F0 (%)") -->
+
+<!--   ggplot(data_N_stress, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y = DeltaF0_rel)) + -->
+<!--   geom_violin(width = .9) + -->
+<!--   geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) + -->
+<!--   geom_hline(yintercept = 0) + -->
+<!--   ylim(-75, 75)+ -->
+<!--   stat_summary(fun = "mean", shape = 3, size = 1)+ -->
+<!--   theme_classic()+ -->
+<!--   scale_color_discrete(name = "typicality")+ -->
+<!--   ggtitle("∆F0: Noun stressed syllable (N_P*)") + -->
+<!--   xlab("Noun")+ -->
+<!--   ylab("∆F0 (%)") -->
+
+<!--   ggplot(data_N_final, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y = DeltaF0_rel)) + -->
+<!--   geom_violin(width = .9) + -->
+<!--   geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) + -->
+<!--   geom_hline(yintercept = 0) + -->
+<!--   ylim(-75, 75)+ -->
+<!--   stat_summary(fun = "mean", shape = 3, size = 1)+ -->
+<!--   theme_classic()+ -->
+<!--   scale_color_discrete(name = "typicality")+ -->
+<!--   ggtitle("∆F0: Noun final syllable (N_F)") + -->
+<!--   xlab("Noun")+ -->
+<!--   ylab("∆F0 (%)") -->
+
+<!--   ggplot(data_ab, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y = DeltaF0_rel)) + -->
+<!--   geom_violin(width = .9) + -->
+<!--   geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) + -->
+<!--   geom_hline(yintercept = 0) + -->
+<!--   ylim(-75, 75)+ -->
+<!--   stat_summary(fun = "mean", shape = 3, size = 1)+ -->
+<!--   theme_classic()+ -->
+<!--   scale_color_discrete(name = "typicality")+ -->
+<!--   ggtitle("∆F0: ab(legen)") + -->
+<!--   xlab("Noun")+ -->
+<!--   ylab("∆F0 (%)") -->
+
+<!-- ``` -->
+
+## Mass plots
+Prosodic strength (duration X power) of syllabic intervals
+
+***Mass*** interpretation: weaker < 1 < stronger
+
+```{r plotMassBYsyll, warning=FALSE, echo=FALSE}
+
+  # ggplot(data_A_stress, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y = mass_rel)) +
+  # geom_violin(width = .9) +
+  # geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) +
+  # geom_hline(yintercept = 1) +
+  # ylim(0, 3)+
+  # stat_summary(fun = "mean", shape = 3, size = 1)+
+  # theme_classic()+
+  # scale_color_discrete(name = "typicality")+
+  # ggtitle("Mass: Adjective stressed syllable (A_A*/A_P*)") +
+  # xlab("Noun")+
+  # ylab("Mass (relative scale)")
+  # 
+  # ggplot(data_A_final, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y = mass_rel)) +
+  # geom_violin(width = .9) +
+  # geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) +
+  # geom_hline(yintercept = 1) +
+  # ylim(0, 3)+
+  # stat_summary(fun = "mean", shape = 3, size = 1)+
+  # theme_classic()+
+  # scale_color_discrete(name = "typicality")+
+  # ggtitle("Mass: Adjective final syllable (A_F)") +
+  # xlab("Noun")+
+  # ylab("Mass (relative scale)")
+  # 
+  # ggplot(data_N_stress, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y = mass_rel)) +
+  # geom_violin(width = .9) +
+  # geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) +
+  # geom_hline(yintercept = 1) +
+  # ylim(0, 3)+
+  # stat_summary(fun = "mean", shape = 3, size = 1)+
+  # theme_classic()+
+  # scale_color_discrete(name = "typicality")+
+  # ggtitle("Mass: Noun stressed syllable (N_P*)") +
+  # xlab("Noun")+
+  # ylab("Mass (relative scale)")
+  # 
+# NFsPlot <-
+  ggplot(data_N_final, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y = mass_rel)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = 1) +
+  ylim(0, 3)+
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "typicality")+
+  ggtitle("Mass: Noun final syllable (N_F)") +
+  xlab("Noun")+
+  ylab("Mass (relative scale)")
+# print(NFsPlot)
+# ggsave(NFsPlot, file=paste0("plots/NFpositionMass.pdf"),device=cairo_pdf)
+  
+  # ggplot(data_ab, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y = mass_rel)) +
+  # geom_violin(width = .9) +
+  # geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) +
+  # geom_hline(yintercept = 1) +
+  # ylim(0, 3)+
+  # stat_summary(fun = "mean", shape = 3, size = 1)+
+  # theme_classic()+
+  # scale_color_discrete(name = "typicality")+
+  # ggtitle("Mass: ab(legen)") +
+  # xlab("Noun")+
+  # ylab("Mass (relative scale)")
+
+```
+
+## Duration plots 
+Duration of syllabic intervals
+
+Absolute values  
+(200 ms marked for typical average syllable)
+
+```{r plotDurationBYsyll, warning=FALSE, echo=FALSE}
+
+  # ggplot(data_A_stress, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y = intervalDuration)) +
+  # geom_violin(width = .9) +
+  # geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) +
+  # geom_hline(yintercept = 200) +
+  # ylim(0, 400) +
+  # stat_summary(fun = "mean", shape = 3, size = 1)+
+  # theme_classic()+
+  # scale_color_discrete(name = "typicality")+
+  # ggtitle("Duration: Adjective stressed syllable (A_A*/A_P*)") +
+  # xlab("Noun")+
+  # ylab("Duration (ms)")
+  # 
+  # ggplot(data_A_final, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y = intervalDuration)) +
+  # geom_violin(width = .9) +
+  # geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) +
+  # geom_hline(yintercept = 200) +
+  # ylim(0, 400) +
+  # stat_summary(fun = "mean", shape = 3, size = 1)+
+  # theme_classic()+
+  # scale_color_discrete(name = "typicality")+
+  # ggtitle("Duration: Adjective final syllable (A_F)") +
+  # xlab("Noun")+
+  # ylab("Duration (ms)")
+  # 
+  # ggplot(data_N_stress, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y = intervalDuration)) +
+  # geom_violin(width = .9) +
+  # geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) +
+  # geom_hline(yintercept = 200) +
+  # ylim(0, 400) +
+  # stat_summary(fun = "mean", shape = 3, size = 1)+
+  # theme_classic()+
+  # scale_color_discrete(name = "typicality")+
+  # ggtitle("Duration: Noun stressed syllable (N_P*)") +
+  # xlab("Noun")+
+  # ylab("Duration (ms)")
+
+  ggplot(data_N_final, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y = intervalDuration)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = 200) +
+  ylim(0, 400) +
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "typicality")+
+  ggtitle("Duration: Noun final syllable (N_F)") +
+  xlab("Noun")+
+  ylab("Duration (ms)")
+
+  # ggplot(data_ab, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y = intervalDuration)) +
+  # geom_violin(width = .9) +
+  # geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) +
+  # geom_hline(yintercept = 200) +
+  # ylim(0, 400) +
+  # stat_summary(fun = "mean", shape = 3, size = 1)+
+  # theme_classic()+
+  # scale_color_discrete(name = "typicality")+
+  # ggtitle("Duration: ab(legen)") +
+  # xlab("Noun")+
+  # ylab("Duration (ms)")
+
+```
+
+## Power plots
+Periodic energy means of syllabic intervals
+
+Periodic energy in a normalized (0--1) logarithmic scale  
+(0.5 marked for scale's median)
+
+```{r plotPowerBYsyll, warning=FALSE, echo=FALSE}
+
+  # ggplot(data_A_stress, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y =  mass/intervalDuration)) +
+  # geom_violin(width = .9) +
+  # geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) +
+  # geom_hline(yintercept = .5) +
+  # ylim(0, 1) +
+  # stat_summary(fun = "mean", shape = 3, size = 1)+
+  # theme_classic()+
+  # scale_color_discrete(name = "typicality")+
+  # ggtitle("Power: Adjective stressed syllable (A_A*/A_P*)") +
+  # xlab("Noun")+
+  # ylab("Periodic energy (normalized dB)")
+  # 
+  # ggplot(data_A_final, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y =  mass/intervalDuration)) +
+  # geom_violin(width = .9) +
+  # geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) +
+  # geom_hline(yintercept = .5) +
+  # ylim(0, 1) +
+  # stat_summary(fun = "mean", shape = 3, size = 1)+
+  # theme_classic()+
+  # scale_color_discrete(name = "typicality")+
+  # ggtitle("Power: Adjective final syllable (A_F)") +
+  # xlab("Noun")+
+  # ylab("Periodic energy (normalized dB)")
+  # 
+  # ggplot(data_N_stress, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y =  mass/intervalDuration)) +
+  # geom_violin(width = .9) +
+  # geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) +
+  # geom_hline(yintercept = .5) +
+  # ylim(0, 1) +
+  # stat_summary(fun = "mean", shape = 3, size = 1)+
+  # theme_classic()+
+  # scale_color_discrete(name = "typicality")+
+  # ggtitle("Power: Noun stressed syllable (N_P*)") +
+  # xlab("Noun")+
+  # ylab("Periodic energy (normalized dB)")
+
+  ggplot(data_N_final, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y =  mass/intervalDuration)) +
+  geom_violin(width = .9) +
+  geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) +
+  geom_hline(yintercept = .5) +
+  ylim(0, 1) +
+  stat_summary(fun = "mean", shape = 3, size = 1)+
+  theme_classic()+
+  scale_color_discrete(name = "typicality")+
+  ggtitle("Power: Noun final syllable (N_F)") +
+  xlab("Noun")+
+  ylab("Periodic energy (normalized dB)")
+
+  # ggplot(data_ab, aes(x = factor(target_name, level = c("Gurke", "Kirsche", "Moehre",  "Trauben", "Erbsen", "Bohnen", "Walnuss", "Zitrone")), y =  mass/intervalDuration)) +
+  # geom_violin(width = .9) +
+  # geom_jitter(aes(col = typicality), position = position_jitter(width = 0.2), size = 1) +
+  # geom_hline(yintercept = .5) +
+  # ylim(0, 1) +
+  # stat_summary(fun = "mean", shape = 3, size = 1)+
+  # theme_classic()+
+  # scale_color_discrete(name = "typicality")+
+  # ggtitle("Power: ab(legen)") +
+  # xlab("Noun")+
+  # ylab("Periodic energy (normalized dB)")
+
+```
