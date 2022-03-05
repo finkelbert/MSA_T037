@@ -112,16 +112,24 @@ trial_lists_df$speaker[which(trial_lists_df$speaker == "JW_2")] <- "JW2"
 trial_lists_df$speaker[which(trial_lists_df$speaker == "JW_3")] <- "JW3"
 trial_lists_df$speaker <- as.factor(trial_lists_df$speaker)
 
+# ---
+
+# locate relevant trial #
+trial_lists_df$trial[which(trial_lists_df$condition=="NF" & trial_lists_df$speaker=="TS" & (trial_lists_df$target_name=="Zitrone" | trial_lists_df$target_name=="Trauben"))]
+
+# ---
+
+## Write the MSA combied data file
+write.csv(trial_lists_df, "data_tables/trial_lists_combined.csv", row.names=FALSE)
+
 ## combine MSA data wirh ProPer scores
 ProPerMSA <- left_join(nano_scores_df, trial_lists_df, by = c("speaker", "trial", "condition"))
 
 # temporary fix
 # ProPerMSA$syllable[which(ProPerMSA$syllable=="\nab")] <- "ab"
-droplevels(ProPerMSA$syllable)
+# droplevels(ProPerMSA$syllable)
 
 ## Write the ProPer MSA scores data file
 write.csv(ProPerMSA, "data_tables/ProPer_MSA_scores.csv", row.names=FALSE)
 
-
 ```
-
