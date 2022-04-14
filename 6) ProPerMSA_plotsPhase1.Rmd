@@ -48,7 +48,7 @@ data_late_Phase2 <- filter(data_phase2, trial > 35) # trial > 45
 
 ### Distributions of ProPer metrics
 
-#### MSA Team 037
+#### MSA Team xxx
 
 The following plots show F0-related metrics (*synchrony* and *∆F0*) and a prosodic strength metric (*mass*) from the ProPer toolbox. 
 
